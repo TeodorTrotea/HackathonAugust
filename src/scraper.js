@@ -2,6 +2,7 @@ import Database from './database.js';
 import VisitBrusselsScraper from './scrapers/visitbrussels.js';
 import UitInVlaanderenScraper from './scrapers/uitinvlaanderen.js';
 import EventbriteScraper from './scrapers/eventbrite.js';
+import CSVExporter from './export.js';
 
 class EventScraper {
   constructor() {
@@ -44,6 +45,15 @@ class EventScraper {
       const duration = ((Date.now() - startTime) / 1000).toFixed(2);
       console.log(`\nScraping completed in ${duration} seconds`);
       console.log(`Total events processed: ${totalEvents}`);
+      
+      // Export to CSV after successful scrape
+      if (totalEvents > 0) {
+        console.log('\nExporting data to CSV files...');
+        const exporter = new CSVExporter();
+        await exporter.initialize();
+        await exporter.exportAll();
+        await exporter.close();
+      }
       
       return totalEvents;
     } catch (error) {

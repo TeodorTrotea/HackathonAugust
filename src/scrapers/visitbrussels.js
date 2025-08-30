@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 class VisitBrusselsScraper {
   constructor() {
     this.baseUrl = 'https://www.visit.brussels';
-    this.eventsUrl = `${this.baseUrl}/en/agenda`;
+    this.eventsUrl = `${this.baseUrl}/en/events`;
   }
 
   async scrapeEvents(maxPages = 5) {
@@ -65,7 +65,7 @@ class VisitBrusselsScraper {
     const imageUrl = $el.find('img').first().attr('src');
     const category = $el.find('.category, .tag').first().text().trim();
 
-    const registration_url = link ? (link.startsWith('http') ? link : `${this.baseUrl}${link}`) : null;
+    const website_url = link ? (link.startsWith('http') ? link : `${this.baseUrl}${link}`) : null;
     const image_url = imageUrl ? (imageUrl.startsWith('http') ? imageUrl : `${this.baseUrl}${imageUrl}`) : null;
 
     return {
@@ -76,7 +76,7 @@ class VisitBrusselsScraper {
       location: location || 'Brussels',
       type: category || 'Meetup',
       image_url: image_url,
-      registration_url: registration_url,
+      website_url: website_url,
       tags: [],
       community: {
         name: 'Visit Brussels',

@@ -72,7 +72,7 @@ class EventbriteScraper {
       location: venue || city,
       type: 'Meetup',
       image_url: image,
-      registration_url: website_url,
+      website_url: website_url,
       tags: [],
       community: {
         name: organizer || `Eventbrite ${city}`,

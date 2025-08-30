@@ -13,7 +13,15 @@ class UitInVlaanderenScraper {
     try {
       browser = await puppeteer.launch({ 
         headless: 'new',
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--no-first-run',
+          '--disable-default-apps'
+        ]
       });
       
       for (const city of cities) {
@@ -76,7 +84,7 @@ class UitInVlaanderenScraper {
             location: eventData.location || city,
             type: eventData.category || 'Meetup',
             image_url: eventData.image,
-            registration_url: eventData.link,
+            website_url: eventData.link,
             tags: [],
             community: {
               name: `UiT in ${city.charAt(0).toUpperCase() + city.slice(1)}`,
