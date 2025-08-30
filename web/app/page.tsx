@@ -4,12 +4,34 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send } from "lucide-react"
+import { Send, Sparkles } from "lucide-react"
 import Link from 'next/link'
 import Image from 'next/image'
+import EventCard from '@/components/EventCard'
+import ErrorBoundary from '@/components/ErrorBoundary'
+
+interface Event {
+  id: string
+  title: string
+  description: string
+  date: string
+  time: string | null
+  location: string
+  type: string
+  image_url: string
+  registration_url: string
+  tags: string
+  status: string
+}
+
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  events?: Event[]
+}
 
 export default function BelgiumTechChat() {
-  const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -31,14 +53,36 @@ export default function BelgiumTechChat() {
     // Add user message
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
+    try {
+      // Call the agent API with conversation history
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          message: userMessage,
+          conversationHistory: messages
+        })
+      })
+      
+      const data = await response.json()
+      
+      // Add assistant message with events
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `I understand you're asking about "${userMessage}". This is a demo response for the Belgium tech events chat interface. In a real implementation, this would connect to an AI service to provide helpful responses about tech events, communities, and opportunities in Belgium.` 
+        content: data.response,
+        events: data.events
       }])
+    } catch (error) {
+      console.error('Error calling chat API:', error)
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm sorry, I encountered an error while searching for events. Please try again."
+      }])
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   // Auto scroll to bottom when new messages appear
@@ -73,14 +117,30 @@ export default function BelgiumTechChat() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-8 w-full flex flex-col">
+      <main className="flex-1 max-w-6xl mx-auto px-6 py-8 w-full flex flex-col">
         {messages.length === 0 ? (
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="text-center mb-8">
-              <div className="text-2xl mb-2">💬</div>
+              <div className="flex items-center justify-center mb-4">
+                <Sparkles className="w-8 h-8 text-blue-400" />
+              </div>
               <p className="text-lg mb-2">Ask me about tech events in Belgium!</p>
-              <p className="text-sm text-neutral-400">Events, communities, networking opportunities and more.</p>
+              <p className="text-sm text-neutral-400 mb-4">Powered by AI • Events, communities, networking opportunities and more.</p>
+              <div className="flex flex-wrap gap-2 justify-center text-xs text-neutral-500">
+                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('AI events in Brussels')}>
+                  "AI events in Brussels"
+                </span>
+                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Startup meetups')}>
+                  "Startup meetups"
+                </span>
+                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Tech conferences')}>
+                  "Tech conferences"
+                </span>
+                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Networking events')}>
+                  "Networking events"
+                </span>
+              </div>
             </div>
             {/* Input */}
             <ChatInput
@@ -93,27 +153,44 @@ export default function BelgiumTechChat() {
         ) : (
           <>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto mb-4 space-y-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto mb-4 space-y-6 no-scrollbar">
               {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[80%] p-4 rounded-lg break-words whitespace-pre-wrap ${
-                      message.role === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-neutral-800 text-neutral-100'
-                    }`}
-                  >
-                    {message.content}
+                <div key={index} className="space-y-4">
+                  {/* Message bubble */}
+                  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[80%] p-4 rounded-lg break-words whitespace-pre-wrap ${
+                        message.role === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-neutral-800 text-neutral-100'
+                      }`}
+                    >
+                      {message.content}
+                    </div>
                   </div>
+                  
+                  {/* Event cards */}
+                  {message.events && message.events.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full">
+                      {message.events.map((event, eventIndex) => (
+                        <ErrorBoundary key={event.id || `event-${index}-${eventIndex}`}>
+                          <EventCard event={event} />
+                        </ErrorBoundary>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-neutral-800 text-neutral-100 p-4 rounded-lg">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                      <div className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                      </div>
+                      <span className="text-sm text-neutral-300">AI agent is deeply analyzing your request and evaluating events...</span>
                     </div>
                   </div>
                 </div>
@@ -184,7 +261,7 @@ function ChatInput({
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800 py-4 text-center text-sm text-neutral-400">
+      <footer className="border-t border-neutral-800 py-4 text-center text-sm text-neutral-400 mt-6">
         <p>© 2025 Belgium Tech Chat. All rights reserved.</p>
         <p className='text-neutral-600 text-xs'>
           A{' '}
