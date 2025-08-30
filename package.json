@@ -8,15 +8,19 @@
     "start": "node src/index.js",
     "scrape": "node src/scraper.js",
     "export": "node src/export.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "test-luma": "node test-luma.js",
+    "test-eventbrite": "node test-eventbrite.js",
+    "aiscrape": "node test-ai-scraper.js"
   },
   "dependencies": {
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
     "node-cron": "^3.0.3",
+    "openai": "^5.16.0",
     "puppeteer": "^21.0.0",
-    "sqlite3": "^5.1.6",
-    "dotenv": "^16.3.1"
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
