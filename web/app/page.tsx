@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Sparkles } from "lucide-react"
+import { Send, Settings } from "lucide-react"
 import Link from 'next/link'
 import Image from 'next/image'
 import EventCard from '@/components/EventCard'
@@ -94,13 +94,13 @@ export default function BelgiumTechChat() {
   }, [messages, isLoading])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-900 to-black text-white flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-800 to-black text-white flex flex-col">
       {/* Header Navigation */}
       <header className="bg-black border-b border-neutral-800">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <nav className="flex items-center justify-between">
+          <nav className="flex items-center justify-center">
             <Link
-              href="/"
+              href="/" 
               className="flex items-center space-x-2 select-none cursor-pointer group"
             >
               <Image
@@ -113,13 +113,6 @@ export default function BelgiumTechChat() {
                 BELGIUMTECH.CHAT
               </span>
             </Link>
-            
-            {/* LangChain Badge */}
-            <div className="flex items-center space-x-2">
-              <div className="px-3 py-1 text-sm bg-blue-600 text-white rounded-full">
-                Powered by LangChain
-              </div>
-            </div>
           </nav>
         </div>
       </header>
@@ -131,21 +124,27 @@ export default function BelgiumTechChat() {
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center mb-4">
-                <Sparkles className="w-8 h-8 text-blue-400" />
+                <Image
+                  src="/belgiumtech-chat-logo.png"
+                  width={150}
+                  height={150}
+                  alt="BelgiumTech logo"
+                />
               </div>
-              <p className="text-lg mb-2">Ask me about tech events in Belgium!</p>
-              <p className="text-sm text-neutral-400 mb-4">Powered by AI • Events, communities, networking opportunities and more.</p>
-              <div className="flex flex-wrap gap-2 justify-center text-xs text-neutral-500">
-                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('AI events in Brussels')}>
+              <h1 className="text-5xl font-extrabold -mb-2">Find Your Next</h1>
+              <h1 className="text-5xl font-extrabold mb-6">Tech Event In Belgium</h1>
+              <p className="text-neutral-400 mb-6">Powered by AI • Events, communities, networking opportunities and more.</p>
+              <div className="flex flex-wrap gap-2 justify-center text-neutral-500">
+                <span className="bg-neutral-800 px-4 py-2 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('AI events in Brussels')}>
                   "AI events in Brussels"
                 </span>
-                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Startup meetups')}>
+                <span className="bg-neutral-800 px-4 py-2 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Startup meetups')}>
                   "Startup meetups"
                 </span>
-                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Tech conferences')}>
+                <span className="bg-neutral-800 px-4 py-2 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Tech conferences')}>
                   "Tech conferences"
                 </span>
-                <span className="bg-neutral-800 px-2 py-1 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Networking events')}>
+                <span className="bg-neutral-800 px-4 py-2 rounded cursor-pointer hover:bg-neutral-700" onClick={() => setInput('Networking events')}>
                   "Networking events"
                 </span>
               </div>
@@ -227,9 +226,7 @@ export default function BelgiumTechChat() {
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                       </div>
-                      <span className="text-sm text-neutral-300">
-                        LangChain agent creating embeddings and performing semantic vector search...
-                      </span>
+                      <span className="text-sm text-neutral-300">AI agent is deeply analyzing your request and evaluating events...</span>
                     </div>
                   </div>
                 </div>
@@ -277,10 +274,19 @@ function ChatInput({
               }
             }}
             placeholder="Ask about tech events in Belgium..."
-            className="w-full bg-neutral-800 border-neutral-600 text-white placeholder-neutral-400 focus:border-blue-500 resize-none min-h-[52px] max-h-[240px] overflow-y-auto pr-12"
+            className="w-full bg-neutral-800 border-neutral-600 text-white placeholder-neutral-400 focus:border-blue-500 resize-none pr-14 !text-base"
             disabled={isLoading}
             rows={1}
-            style={{ height: 'auto', minHeight: '52px' }}
+            style={{
+              fontSize: '1rem',      // 16px
+              lineHeight: '1.75rem',      // matches font size for vertical centering
+              minHeight: '52px',
+              maxHeight: '240px',
+              height: 'auto',
+              paddingTop: '0.75rem',    // adjust vertical spacing
+              paddingBottom: '0.75rem',
+              overflowY: 'hidden',       // hide scroll until needed
+            }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement
               target.style.height = 'auto'
@@ -289,13 +295,17 @@ function ChatInput({
               target.style.overflowY = target.scrollHeight > 240 ? 'auto' : 'hidden'
             }}
           />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 bottom-2 bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 p-0 rounded"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          {/* Buttons container */}
+          <div className="absolute right-2 bottom-2 flex flex-col space-y-2 mr-1">
+            {/* Send Button */}
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white w-9 h-9 p-0 rounded"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

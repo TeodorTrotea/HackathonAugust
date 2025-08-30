@@ -88,14 +88,40 @@ function getThemeColors(type: string, tags: string) {
 
 function formatDate(dateString: string): string {
   try {
+    if (!dateString || dateString.trim() === '') return 'Date TBD'
+    
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) return 'Date TBD'
+    
+    // Check if it's a realistic future date
+    const today = new Date()
+    const oneYearFromNow = new Date()
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+    
+    // Format the date nicely
+    const formatted = date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
     })
+    
+    // Add relative time indicators for near dates
+    const diffTime = date.getTime() - today.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) {
+      return `${formatted} (Today)`
+    } else if (diffDays === 1) {
+      return `${formatted} (Tomorrow)`
+    } else if (diffDays > 0 && diffDays <= 7) {
+      return `${formatted} (${diffDays} days)`
+    }
+    
+    return formatted
   } catch {
-    return dateString
+    return dateString || 'Date TBD'
   }
 }
 
