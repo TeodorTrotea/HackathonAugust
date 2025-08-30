@@ -1,0 +1,95 @@
+{
+  "sites": [
+    {
+      "name": "Meetup Brussels Tech",
+      "url": "https://www.meetup.com/find/?keywords=tech&location=be--brussels",
+      "selectors": {
+        "eventContainer": "[data-testid='event-card']",
+        "waitFor": "[data-testid='event-card']"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "Eventbrite Belgium Tech",
+      "url": "https://www.eventbrite.com/d/belgium/tech-events/",
+      "selectors": {
+        "eventContainer": ".event-card",
+        "waitFor": ".event-card"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "StartupDigest Belgium",
+      "url": "https://www.startupdigest.com/digests/belgium",
+      "selectors": {
+        "eventContainer": ".event-item",
+        "waitFor": "main"
+      },
+      "frequency": "weekly"
+    },
+    {
+      "name": "Tech.eu Events",
+      "url": "https://tech.eu/events",
+      "selectors": {
+        "eventContainer": "article",
+        "waitFor": "article"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "Brussels Technology Events",
+      "url": "https://www.eventbrite.be/d/belgium--brussels/technology/",
+      "selectors": {
+        "eventContainer": "[data-testid='event-card']",
+        "waitFor": "[data-testid='event-card']"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "Digital First Belgium",
+      "url": "https://digitalfirst.be/events",
+      "selectors": {
+        "eventContainer": ".event-wrapper",
+        "waitFor": ".event-wrapper"
+      },
+      "frequency": "weekly"
+    },
+    {
+      "name": "BeCentral Events",
+      "url": "https://www.becentral.org/events",
+      "selectors": {
+        "eventContainer": ".event-card",
+        "waitFor": ".event-card"
+      },
+      "frequency": "weekly"
+    },
+    {
+      "name": "Luma Belgium Tech",
+      "url": "https://lu.ma/belgium-tech",
+      "selectors": {
+        "eventContainer": "[data-testid='event-card']",
+        "waitFor": "main"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "Amsterdam Tech Events",
+      "url": "https://www.meetup.com/find/?keywords=tech&location=nl--amsterdam",
+      "selectors": {
+        "eventContainer": "[data-testid='event-card']",
+        "waitFor": "[data-testid='event-card']"
+      },
+      "frequency": "daily"
+    },
+    {
+      "name": "TechBelgium.io",
+      "url": "https://techbelgium.io/events",
+      "selectors": {
+        "eventContainer": ".event-item",
+        "waitFor": "main"
+      },
+      "frequency": "weekly"
+    }
+  ],
+  "customSites": []
+}

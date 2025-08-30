@@ -86,13 +86,13 @@ class Database {
       location,
       type,
       image_url,
-      registration_url,
+      website_url,
       tags,
       community
     } = event;
 
     try {
-      const existing = await this.get('SELECT id FROM events WHERE registration_url = ?', [registration_url]);
+      const existing = await this.get('SELECT id FROM events WHERE registration_url = ?', [website_url]);
       
       if (existing) {
         await this.run(`
@@ -102,7 +102,7 @@ class Database {
               updated_at = CURRENT_TIMESTAMP
           WHERE registration_url = ?
         `, [title, description, date, time, location, type, 
-            image_url, JSON.stringify(tags || []), registration_url]);
+            image_url, JSON.stringify(tags || []), website_url]);
         
         console.log(`Updated event: ${title}`);
         return existing.id;
@@ -114,7 +114,7 @@ class Database {
             image_url, registration_url, tags, status
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED')
         `, [eventId, title, description, date, time, location, type,
-            image_url, registration_url, JSON.stringify(tags || [])]);
+            image_url, website_url, JSON.stringify(tags || [])]);
         
         console.log(`Saved new event: ${title}`);
         
