@@ -2,12 +2,21 @@ import Database from './database.js';
 import VisitBrusselsScraper from './scrapers/visitbrussels.js';
 import UitInVlaanderenScraper from './scrapers/uitinvlaanderen.js';
 import EventbriteScraper from './scrapers/eventbrite.js';
+import APIScraper from './scrapers/api-scraper.js';
+import EventbriteAPIScraper from './scrapers/eventbrite-api.js';
+import MeetupAPIScraper from './scrapers/meetup-api.js';
 import CSVExporter from './export.js';
 
 class EventScraper {
   constructor() {
     this.db = new Database();
+    // Use both traditional scrapers and API-based scrapers
     this.scrapers = [
+      // API-based scrapers (more reliable)
+      new MeetupAPIScraper(),
+      new EventbriteAPIScraper(),
+      new APIScraper(),
+      // Traditional scrapers (fallback)
       new VisitBrusselsScraper(),
       new UitInVlaanderenScraper(),
       new EventbriteScraper()

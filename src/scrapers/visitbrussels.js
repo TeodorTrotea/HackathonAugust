@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 class VisitBrusselsScraper {
   constructor() {
     this.baseUrl = 'https://www.visit.brussels';
-    this.eventsUrl = `${this.baseUrl}/en/events`;
+    this.eventsUrl = `${this.baseUrl}/en/visitors/agenda/all-events-wizard`;
   }
 
   async scrapeEvents(maxPages = 5) {
