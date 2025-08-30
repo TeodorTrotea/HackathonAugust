@@ -34,6 +34,7 @@ export default function BelgiumTechChat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  // Using LangChain as the only agent
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const handleSend = async () => {
@@ -54,7 +55,7 @@ export default function BelgiumTechChat() {
     setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     
     try {
-      // Call the agent API with conversation history
+      // Use LangChain agent exclusively
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -97,7 +98,7 @@ export default function BelgiumTechChat() {
       {/* Header Navigation */}
       <header className="bg-black border-b border-neutral-800">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <nav className="flex items-center justify-center">
+          <nav className="flex items-center justify-between">
             <Link
               href="/"
               className="flex items-center space-x-2 select-none cursor-pointer group"
@@ -112,6 +113,13 @@ export default function BelgiumTechChat() {
                 BELGIUMTECH.CHAT
               </span>
             </Link>
+            
+            {/* LangChain Badge */}
+            <div className="flex items-center space-x-2">
+              <div className="px-3 py-1 text-sm bg-blue-600 text-white rounded-full">
+                Powered by LangChain
+              </div>
+            </div>
           </nav>
         </div>
       </header>
@@ -172,11 +180,40 @@ export default function BelgiumTechChat() {
                   {/* Event cards */}
                   {message.events && message.events.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-full">
-                      {message.events.map((event, eventIndex) => (
-                        <ErrorBoundary key={event.id || `event-${index}-${eventIndex}`}>
-                          <EventCard event={event} />
-                        </ErrorBoundary>
-                      ))}
+                      {message.events
+                        .filter((event, eventIndex) => {
+                          // Filter out invalid events before rendering
+                          if (!event) {
+                            console.warn(`Skipping null/undefined event at index ${eventIndex}`)
+                            return false
+                          }
+                          if (typeof event !== 'object') {
+                            console.warn(`Skipping non-object event at index ${eventIndex}:`, typeof event)
+                            return false
+                          }
+                          if (!event.title || typeof event.title !== 'string' || event.title.trim() === '') {
+                            console.warn(`Skipping event with invalid title at index ${eventIndex}:`, event)
+                            return false
+                          }
+                          return true // Allow events even without IDs - we'll generate keys
+                        })
+                        .map((event, eventIndex) => {
+                          try {
+                            // Generate a unique key using multiple factors to avoid duplicates
+                            const uniqueKey = `msg-${index}-evt-${eventIndex}-${event.id || 'no-id'}-${event.title?.substring(0, 20) || 'no-title'}-${Date.now()}`
+                            
+                            return (
+                              <ErrorBoundary key={uniqueKey}>
+                                <EventCard event={event} />
+                              </ErrorBoundary>
+                            )
+                          } catch (error) {
+                            console.error(`Error rendering event card for ${event.title}:`, error)
+                            return null
+                          }
+                        })
+                        .filter(Boolean) // Remove any null components
+                      }
                     </div>
                   )}
                 </div>
@@ -190,7 +227,9 @@ export default function BelgiumTechChat() {
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
                         <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                       </div>
-                      <span className="text-sm text-neutral-300">AI agent is deeply analyzing your request and evaluating events...</span>
+                      <span className="text-sm text-neutral-300">
+                        LangChain agent creating embeddings and performing semantic vector search...
+                      </span>
                     </div>
                   </div>
                 </div>

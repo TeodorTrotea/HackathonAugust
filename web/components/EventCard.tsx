@@ -120,28 +120,28 @@ function getTags(tagsString: string): string[] {
 }
 
 function isValidImageUrl(url: string): boolean {
-  if (!url || typeof url !== 'string') return false
+  if (!url || typeof url !== 'string' || url.trim() === '') return false
   
   try {
+    // Just check if it's a valid URL
     new URL(url)
     
-    // Check if it's a placeholder or empty image
-    const placeholderPatterns = [
-      /placeholder/i,
-      /example\.com/i,
-      /localhost/i,
-      /127\.0\.0\.1/i,
-      /\.(svg|gif)$/i, // Might be problematic
+    // Only exclude obvious non-images
+    const excludePatterns = [
+      /^data:text/i,  // Data URIs that are text
+      /\.pdf$/i,       // PDF files
+      /\.doc/i,        // Document files
+      /\.txt$/i,       // Text files
     ]
     
-    if (placeholderPatterns.some(pattern => pattern.test(url))) {
+    if (excludePatterns.some(pattern => pattern.test(url))) {
       return false
     }
     
-    // Check for common image extensions
-    const imageExtensions = /\.(jpg|jpeg|png|webp|avif|bmp)(\?.*)?$/i
-    return imageExtensions.test(url) || url.includes('images.') || url.includes('img.')
+    // Allow everything else - let the image loader handle errors
+    return true
   } catch {
+    // Not a valid URL
     return false
   }
 }
@@ -150,11 +150,69 @@ export default function EventCard({ event }: EventCardProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
   
-  const theme = getThemeColors(event.type, event.tags)
-  const icon = getEventIcon(event.type, event.tags)
-  const tags = getTags(event.tags)
+  // Comprehensive safety checks - skip invalid events entirely
+  if (!event) {
+    console.warn('EventCard received null/undefined event')
+    return null
+  }
+
+  if (typeof event !== 'object') {
+    console.warn('EventCard received non-object event:', typeof event)
+    return null
+  }
+
+  if (!event.title || typeof event.title !== 'string' || event.title.trim() === '') {
+    console.warn('EventCard received event with invalid title:', event)
+    return null
+  }
   
-  const hasValidImage = isValidImageUrl(event.image_url) && !imageError
+  // Skip events that look like raw CSV data
+  if (event.title.includes(',2025-') || event.title.includes('+00') || event.title.length > 200) {
+    console.warn('EventCard received malformed event data:', event.title.substring(0, 50))
+    return null
+  }
+  
+  // Skip if description is actually raw CSV data
+  if (event.description && typeof event.description === 'string' && 
+      (event.description.includes(',2025-') && event.description.includes('+00'))) {
+    console.warn('EventCard received event with malformed description')
+    return null
+  }
+  
+  // Provide safe defaults for missing fields with additional validation
+  const safeEvent = {
+    id: event.id ? String(event.id) : `generated-${Date.now()}-${Math.random()}`,
+    title: String(event.title).trim(),
+    description: event.description && typeof event.description === 'string' 
+      ? event.description.trim() 
+      : 'No description available',
+    date: event.date && typeof event.date === 'string' 
+      ? event.date 
+      : new Date().toISOString().split('T')[0],
+    time: event.time && typeof event.time === 'string' ? event.time : null,
+    location: event.location && typeof event.location === 'string' 
+      ? event.location.trim() 
+      : 'Location TBD',
+    type: event.type && typeof event.type === 'string' 
+      ? event.type.trim() 
+      : 'Event',
+    image_url: event.image_url && typeof event.image_url === 'string' 
+      ? event.image_url.trim() 
+      : '',
+    registration_url: event.registration_url && typeof event.registration_url === 'string' 
+      ? event.registration_url.trim() 
+      : '#',
+    tags: event.tags && typeof event.tags === 'string' 
+      ? event.tags.trim() 
+      : '',
+    status: event.status || 'published'
+  }
+  
+  const theme = getThemeColors(safeEvent.type, safeEvent.tags)
+  const icon = getEventIcon(safeEvent.type, safeEvent.tags)
+  const tags = getTags(safeEvent.tags)
+  
+  const hasValidImage = isValidImageUrl(safeEvent.image_url) && !imageError
   
   return (
     <Card className={`bg-gradient-to-br ${theme.gradient} border ${theme.border} hover:border-opacity-50 transition-all duration-200 hover:scale-[1.02] group overflow-hidden`}>
@@ -162,22 +220,20 @@ export default function EventCard({ event }: EventCardProps) {
         {/* Header with image and icon */}
         <div className="flex items-start gap-4 mb-4">
           <div className="relative w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center">
-            {hasValidImage ? (
+            {hasValidImage && !imageError ? (
               <>
-                <Image
-                  src={event.image_url}
-                  alt={event.title}
-                  width={64}
-                  height={64}
+                {/* Try Next/Image first, but have fallback ready */}
+                <img
+                  src={safeEvent.image_url}
+                  alt={safeEvent.title}
                   className={`object-cover w-full h-full transition-opacity duration-200 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
                   onLoad={() => setImageLoading(false)}
                   onError={() => {
+                    console.log(`Image failed to load, showing icon instead: ${safeEvent.image_url}`)
                     setImageError(true)
                     setImageLoading(false)
                   }}
-                  priority={false}
-                  placeholder="blur"
-                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyatcVTHHHHHEeiX7GbWjHHHHHHHHHHnkfTyP5v/9k="
+                  loading="lazy"
                 />
                 {imageLoading && (
                   <div className="absolute inset-0 animate-pulse bg-neutral-600 flex items-center justify-center">
@@ -195,20 +251,20 @@ export default function EventCard({ event }: EventCardProps) {
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
                 {icon}
-                <span className="text-sm text-neutral-400 font-medium">{event.type}</span>
+                <span className="text-sm text-neutral-400 font-medium">{safeEvent.type}</span>
               </div>
             </div>
             <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-opacity-90">
-              {event.title}
+              {safeEvent.title}
             </h3>
           </div>
         </div>
 
         {/* Description */}
         <p className="text-sm text-neutral-300 mb-4 line-clamp-3">
-          {event.description.length > 150 
-            ? `${event.description.substring(0, 150)}...` 
-            : event.description
+          {safeEvent.description.length > 150 
+            ? `${safeEvent.description.substring(0, 150)}...` 
+            : safeEvent.description
           }
         </p>
 
@@ -216,18 +272,18 @@ export default function EventCard({ event }: EventCardProps) {
         <div className="space-y-2 mb-4">
           <div className="flex items-center gap-2 text-sm text-neutral-400">
             <Calendar className="w-4 h-4" />
-            <span>{formatDate(event.date)}</span>
-            {event.time && (
+            <span>{formatDate(safeEvent.date)}</span>
+            {safeEvent.time && (
               <>
                 <Clock className="w-4 h-4 ml-2" />
-                <span>{formatTime(event.time)}</span>
+                <span>{formatTime(safeEvent.time)}</span>
               </>
             )}
           </div>
           
           <div className="flex items-center gap-2 text-sm text-neutral-400">
             <MapPin className="w-4 h-4" />
-            <span className="line-clamp-1">{event.location}</span>
+            <span className="line-clamp-1">{safeEvent.location}</span>
           </div>
         </div>
 
@@ -251,7 +307,7 @@ export default function EventCard({ event }: EventCardProps) {
           className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/30 transition-colors"
         >
           <a
-            href={event.registration_url}
+            href={safeEvent.registration_url}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2"

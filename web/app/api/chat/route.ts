@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import SmartEventAgent from '@/lib/smart-agent'
+import LangChainEventAgent from '@/lib/langchain-agent'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,7 +8,10 @@ export async function POST(request: NextRequest) {
     if (!message || typeof message !== 'string') {
       return NextResponse.json({
         response: "Please provide a valid message.",
-        events: []
+        events: [],
+        processingSteps: [],
+        vectorSimilarityScores: {},
+        error: "Invalid input"
       }, { status: 400 })
     }
 
@@ -16,32 +19,46 @@ export async function POST(request: NextRequest) {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json({
         response: "OpenAI API key is not configured. Please add OPENAI_API_KEY to your .env file.",
-        events: []
+        events: [],
+        processingSteps: [],
+        vectorSimilarityScores: {},
+        error: "Missing API key"
       }, { status: 500 })
     }
 
-    // Validate AI model configuration
-    const validModels = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo']
-    const configuredModel = process.env.OPENAI_MODEL || 'gpt-4o-mini'
+    console.log(`🔗 LangChain chat processing: "${message}"`)
+    const startTime = Date.now()
     
-    if (!validModels.includes(configuredModel)) {
-      console.warn(`Warning: Configured model '${configuredModel}' is not in the list of known valid models. Proceeding anyway.`)
-    }
+    // Use LangChain agent exclusively
+    const agent = new LangChainEventAgent()
+    const result = await agent.processQuery(message)
     
-    // Create smart agent with deep interpretation and LLM evaluation
-    const agent = new SmartEventAgent()
-    const result = await agent.processQuery(message, conversationHistory || [])
+    const processingTime = Date.now() - startTime
+    
+    console.log(`🎯 LangChain processing complete:`)
+    console.log(`   - Events found: ${result.events.length}`)
+    console.log(`   - Processing steps: ${result.processingSteps.length}`)
+    console.log(`   - Total time: ${processingTime}ms`)
     
     return NextResponse.json({
       response: result.message,
-      events: result.events
+      events: result.events,
+      relevanceScores: result.relevanceScores,
+      searchQuery: result.searchQuery,
+      processingSteps: result.processingSteps,
+      vectorSimilarityScores: result.vectorSimilarityScores,
+      processingTime,
+      agentType: 'langchain'
     })
     
   } catch (error) {
-    console.error('Chat API error:', error)
+    console.error('LangChain chat API error:', error)
     return NextResponse.json({
-      response: "I'm sorry, I encountered an error while processing your request. Please try again.",
-      events: []
+      response: "I encountered an error while processing your request with LangChain. Please try again.",
+      events: [],
+      processingSteps: [`Error: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      vectorSimilarityScores: {},
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
