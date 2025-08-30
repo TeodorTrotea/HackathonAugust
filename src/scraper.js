@@ -1,4 +1,5 @@
 import Database from './database.js';
+import TechEventsBelgiumScraper from './scrapers/tech-events-be.js';
 import VisitBrusselsScraper from './scrapers/visitbrussels.js';
 import UitInVlaanderenScraper from './scrapers/uitinvlaanderen.js';
 import EventbriteScraper from './scrapers/eventbrite.js';
@@ -7,9 +8,10 @@ class EventScraper {
   constructor() {
     this.db = new Database();
     this.scrapers = [
-      new VisitBrusselsScraper(),
-      new UitInVlaanderenScraper(),
-      new EventbriteScraper()
+      new TechEventsBelgiumScraper(),  // Known Belgian tech events with real images
+      new VisitBrusselsScraper(),      // Brussels tourism events
+      new UitInVlaanderenScraper(),    // Flemish cultural events
+      new EventbriteScraper()          // Eventbrite Belgium
     ];
   }
 
